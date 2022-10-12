@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 __version__ = "0.0.0+auto.0"
-__repo__ = "https://github.com/stonehippo/ACircuitPython_Bela_Trill.git"
+__repo__ = "https://github.com/stonehippo/CircuitPython_Bela_Trill.git"
 
 class Touch:
     def __init__(self, location_x = 0, size = 0) -> None:
