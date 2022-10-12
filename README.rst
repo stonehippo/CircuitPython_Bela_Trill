@@ -1,7 +1,7 @@
 Introduction
 ============
 
-This driver is for the `Sparkfun Serial LCD Kit <https://www.sparkfun.com/products/10097>`_. It provides and API for the full set of `byte-based commands that control the backpack <https://github.com/jimblom/Serial-LCD-Kit/wiki/Serial-Enabled-LCD-Kit-Datasheet>`_.
+A CircuitPython driver for the `Bela.io Trill touch sensors <https://bela.io/products/trill/>`_
 
 Dependencies
 ============
