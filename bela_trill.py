@@ -13,16 +13,9 @@ __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/stonehippo/CircuitPython_Bela_Trill.git"
 
 class Touch:
-    def __init__(self, location_x = 0, size_x = 0) -> None:
-        self.location_x = location_x
-        self.size = size_x
-
-class Touch2D(Touch):
-    def __init__(self, location_x=0, location_y =0, size_x=0, size_y=0) -> None:
-        super().__init__(location_x, size_x)
-        self.location_y = location_y
-        self.size_y = size_y
-
+    def __init__(self, location = 0, size = 0) -> None:
+        self.location = location
+        self.size = size
 
 # Modes for reading a Trill device
 class TrillMode:
@@ -116,7 +109,8 @@ class Trill:
         self.update_baseline()
         time.sleep(_CMD_DELAY) # give the system enough time to get set up before taking user interactions
 
-        self.touches = []
+        self.vertical_touches = []
+        self.horizontal_touches = []
 
     # does the device has a single axis for sensing?
     def is_1D(self) -> bool:
@@ -195,8 +189,11 @@ class Trill:
         }
         return switch.get(self._type, 30)
 
-    def number_of_touches(self) -> int:
-        return len(self.touches)
+    def number_of_vertical_touches(self) -> int:
+        return len(self.vertical_touches)
+    
+    def number_of_horizontal_touches(self) -> int:
+        return len(self.horizontal_touches)
 
     # return the number of "button" channels
     def number_of_buttons(self) -> int:
@@ -228,7 +225,7 @@ class Trill:
         with self.i2c_device as trill:
             trill.readinto(buffer)
 
-        self.touches = []
+        self.vertical_touches = []
 
         # merge every two bytes to create a set of WORDs (16-bit values)
         buffer = Trill.process_centroid_bytes(buffer, 2)
@@ -241,8 +238,9 @@ class Trill:
             for i in range(len(locations)):
                 if locations[i] is 0xffff: # no touches past this point
                     break
-                self.touches.append(Touch(location_x = locations[i], size_x = sizes[i]))
+                self.vertical_touches.append(Touch(location = locations[i], size = sizes[i]))
         elif (self.is_2D()):
+            self.horizontal_touches = []
             # the first half is split between the vertical and horizontal centroids,
             # and then split each of those in half to get the locations and sizes
             half = buffer_length // 4
@@ -252,7 +250,12 @@ class Trill:
             for i in range(len(v_locations)):
                 if v_locations[i] is 0xffff: # no more touches
                     break
-                self.touches.append(Touch2D(location_x=h_locations[i], location_y=v_locations[i], size_x=h_sizes[i], size_y=v_sizes[i]))
+                self.vertical_touches.append(Touch(location=v_locations[i], size=v_sizes[i]))
+
+            for i in range(len(h_locations)):
+                if h_locations[i] is 0xffff: # no more touches
+                    break
+                self.horizontal_touches.append(Touch(location=h_locations[i], size=h_sizes[i]))
 
 
 
