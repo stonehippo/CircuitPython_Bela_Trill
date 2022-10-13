@@ -236,23 +236,23 @@ class Trill:
         if (self.is_1D()):
             # split the buffer in half: first half is touches, second is sizes
             split_at = buffer_length // 4
-            centroids, sizes = buffer[:split_at], buffer[split_at:]
+            locations, sizes = buffer[:split_at], buffer[split_at:]
 
-            for i in range(len(centroids)):
-                if centroids[i] is 0xffff: # no touches past this point
+            for i in range(len(locations)):
+                if locations[i] is 0xffff: # no touches past this point
                     break
-                self.touches.append(Touch(location_x = centroids[i], size_x = sizes[i]))
+                self.touches.append(Touch(location_x = locations[i], size_x = sizes[i]))
         elif (self.is_2D()):
             # the first half is split between the vertical and horizontal centroids,
-            # and then split each of those in half to get the vertical and horizontal values
+            # and then split each of those in half to get the locations and sizes
             half = buffer_length // 4
             quarter = half // 2
-            v_centroids, v_sizes, h_centroids, h_sizes = buffer[:quarter], buffer[quarter:half], buffer[half:half + quarter], buffer[half + quarter:]
+            v_locations, v_sizes, h_locations, h_sizes = buffer[:quarter], buffer[quarter:half], buffer[half:half + quarter], buffer[half + quarter:]
 
-            for i in range(len(v_centroids)):
-                if v_centroids[i] is 0xffff: # no more touches
+            for i in range(len(v_locations)):
+                if v_locations[i] is 0xffff: # no more touches
                     break
-                self.touches.append(Touch2D(location_x=h_centroids[i], location_y=v_centroids[i], size_x=h_sizes[i], size_y=v_sizes[i]))
+                self.touches.append(Touch2D(location_x=h_locations[i], location_y=v_locations[i], size_x=h_sizes[i], size_y=v_sizes[i]))
 
 
 
