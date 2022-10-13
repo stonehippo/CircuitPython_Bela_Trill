@@ -13,14 +13,15 @@ __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/stonehippo/CircuitPython_Bela_Trill.git"
 
 class Touch:
-    def __init__(self, location_x = 0, size = 0) -> None:
+    def __init__(self, location_x = 0, size_x = 0) -> None:
         self.location_x = location_x
-        self.size = size
+        self.size = size_x
 
 class Touch2D(Touch):
-    def __init__(self, location_x=0, location_y =0, size=0) -> None:
-        super().__init__(location_x, size)
+    def __init__(self, location_x=0, location_y =0, size_x=0, size_y=0) -> None:
+        super().__init__(location_x, size_x)
         self.location_y = location_y
+        self.size_y = size_y
 
 
 # Modes for reading a Trill device
@@ -73,13 +74,25 @@ _PRESCALER_MAX = const(8)
 # valid values for the speed parameter in scan settings
 _TRILL_SPEED = range(0,4)
 
+# max values for each board type; see https://learn.bela.io/using-trill/trill-and-arduino/#reading-from-the-sensor
+# BAR_POSITION_MAX = 3200
+# BAR_SIZE_MAX = 4566
+# RING_POSITION_MAX = 3456
+# RING_SIZE_MAX = 5000
+# SQUARE_POSITION_MAX = 1792
+# SQUARE_SIZE_MAX = 3780
+# HEX_POSITION_MAX = 1920
+# HEX_SIZE_MAX = 4000
+# FLEX_POSITION_MAX = 3712
+# FLEX_SIZE_MAX = 1200
+
 class Trill:
     @staticmethod
-    def process_centroids(data) -> array[Touch]:
+    def process_centroids(data) -> list:
         return []
     
     @staticmethod
-    def process_centroid_bytes(l, x):
+    def process_centroid_bytes(l, x) -> list:
         return [l[i+1] + (l[i] << 8) for i in range(0,len(l), x)]
 
     @staticmethod
@@ -217,18 +230,30 @@ class Trill:
 
         self.touches = []
 
+        # merge every two bytes to create a set of WORDs (16-bit values)
+        buffer = Trill.process_centroid_bytes(buffer, 2)
+
         if (self.is_1D()):
             # split the buffer in half: first half is touches, second is sizes
             split_at = buffer_length // 4
-            buffer = Trill.process_centroid_bytes(buffer, 2)
             centroids, sizes = buffer[:split_at], buffer[split_at:]
 
             for i in range(len(centroids)):
                 if centroids[i] is 0xffff: # no touches past this point
                     break
-                self.touches.append(Touch(location_x = centroids[i], size = sizes[i]))
+                self.touches.append(Touch(location_x = centroids[i], size_x = sizes[i]))
         elif (self.is_2D()):
-            pass
+            # the first half is split between the vertical and horizontal centroids,
+            # and then split each of those in half to get the vertical and horizontal values
+            half = buffer_length // 4
+            quarter = half // 2
+            v_centroids, v_sizes, h_centroids, h_sizes = buffer[:quarter], buffer[quarter:half], buffer[half:half + quarter], buffer[half + quarter:]
+
+            for i in range(len(v_centroids)):
+                if v_centroids[i] is 0xffff: # no more touches
+                    break
+                self.touches.append(Touch2D(location_x=h_centroids[i], location_y=v_centroids[i], size_x=h_sizes[i], size_y=v_sizes[i]))
+
 
 
     def button_value(self):
