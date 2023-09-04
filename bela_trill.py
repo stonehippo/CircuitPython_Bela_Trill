@@ -164,8 +164,8 @@ class Trill:
         buffer = bytearray(buffer_size)
         with self.i2c_device as trill:
             trill.write(cmd)
-            time.sleep(0.025)
             if buffer_size > 0:
+                time.sleep(0.025)
                 trill.readinto(buffer)
             return buffer
 
